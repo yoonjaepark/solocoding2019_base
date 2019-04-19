@@ -10,7 +10,7 @@ class Detail extends StatelessWidget {
     final Memo memo = ModalRoute.of(context).settings.arguments;
     final _contentController = TextEditingController();
     final _titleController = TextEditingController();
-    _contentController.text = memo.content;
+    _contentController.text = memo.content[0].content;
     _titleController.text = memo.title;
     return new Scaffold(
         appBar: AppBar(
@@ -42,10 +42,15 @@ class Detail extends StatelessWidget {
   }
 
   popPress(context, Memo memo, _titleController, _contentController) async {
+    List<MemoContent> result = [];
+    result.add(MemoContent(content: _contentController.text, type: "text"));
     Memo newMemo = new Memo(
         id: memo.id,
         title: _titleController.text,
-        content: _contentController.text,
+        // content: [
+        //   {"type": "text", "content": _contentController.text}
+        // ],
+        content: result,
         updatedAt: memo.updatedAt);
     this.bloc.update(newMemo);
     Navigator.pop(context, false);

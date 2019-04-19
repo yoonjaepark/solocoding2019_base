@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
@@ -41,12 +42,16 @@ class DBProvider {
 
     DateTime now = DateTime.now();
     String formattedDate = now.toIso8601String();
+    // JsonCodec codec = new JsonCodec();
+    //  codec.encode("[{type: as, content: as}]");
     var raw = await db.rawInsert(
         "INSERT Into Memo (title,content,updatedAt)"
         " VALUES (?,?,?)",
         [
           newMemo.title == null ? 'untitle' : newMemo,
-          newMemo.content == null ? '' : newMemo.content,
+          newMemo.content == null
+              ? "[{\"content\": \"as\", \"type\": \"as\"}]"
+              : newMemo.content,
           formattedDate
         ]);
     return raw;
@@ -93,8 +98,13 @@ class DBProvider {
   Future<List<Memo>> getAllMemos() async {
     final db = await database;
     var res = await db.query("Memo");
-    List<Memo> list =
-        res.isNotEmpty ? res.map((c) => Memo.fromMap(c)).toList() : [];
+    List<Memo> list = [];
+    if (res.isNotEmpty) {
+      for (var i in res) {
+        list.add(Memo.fromMap(i));
+      }
+    }
+    // res.isNotEmpty ? res.map((c) => Memo.fromMap(c)) as Memo : [];
 
     return list;
   }

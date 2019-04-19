@@ -120,7 +120,7 @@ class _HomeState extends State<Home> {
                               children: <Widget>[Text('$year년$month월')]),
                           ListTile(
                             title: Text(item.title),
-                            subtitle: Text(item.content),
+                            subtitle: Text(item.content[0].content),
                             leading: Text('$day일'),
                             onTap: () {
                               this.onTitlePressed(item);

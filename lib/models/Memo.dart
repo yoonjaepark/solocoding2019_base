@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -13,33 +14,88 @@ String memoToJson(Memo data) {
 }
 
 class Memo {
-
   int id;
   String title;
-  String content;
+  List<MemoContent> content;
   String updatedAt;
   int isDeleted;
 
-  Memo(
-      {this.id,
-      this.title,
-      this.content,
-      this.updatedAt,
-      this.isDeleted});
+  Memo({this.id, this.title, this.content, this.updatedAt, this.isDeleted});
 
-  factory Memo.fromMap(Map<String, dynamic> json) => new Memo(
-        id: json["id"],
-        title: json["title"],
-        content: json["content"],
-        updatedAt: json["updatedAt"],
-        isDeleted: json["isDeleted"]
-      );
+  factory Memo.fromMap(Map<String, dynamic> parsedJson) {
+    print("parsedJson['content']");
+    print((parsedJson['content']));
+    JsonCodec codec = new JsonCodec();
+    // var decoded = codec.decode(parsedJson['content']);
+    // print("Decoded 1: $decoded");
+    // List r = [];
+    // var result = codec.decode((parsedJson['content']));
+    // for (var i in result) {
+    //   r.add(MemoContent.fromJson(i));
+    // }
+
+    List<MemoContent> products = new List<MemoContent>();
+    List jsonParsed = json.decode(parsedJson['content']);
+    for (int i = 0; i < jsonParsed.length; i++) {
+      products.add(new MemoContent.fromJson(jsonParsed[i]));
+    }
+    return new Memo(
+        id: parsedJson["id"],
+        title: parsedJson["title"],
+        content: products,
+        // content: codec
+        //     .decode((parsedJson['content']))
+        //     .map((value) => new MemoContent.fromJson(value))
+        //     .toList<MemoContent>(),
+        updatedAt: parsedJson["updatedAt"],
+        isDeleted: parsedJson["isDeleted"]);
+  }
+
+  Map<String, dynamic> toMap() {
+    print("#######toMap");
+    JsonCodec codec = new JsonCodec();
+    // print(codec.encode(content));
+    List createDoc = [];
+
+    for (var i = 0; i < content.length; i++) {
+      print(content[i].toMap());
+      createDoc.add(content[i].toMap());
+    }
+    return {
+      "id": id,
+      "title": title,
+      "content": codec.encode(createDoc),
+      "updatedAt": updatedAt,
+      "isDeleted": isDeleted == null ? 0 : isDeleted,
+    };
+  }
+}
+
+class MemoContent {
+  String content;
+  String type;
+  MemoContent({this.content, this.type});
+
+  factory MemoContent.fromJson(Map<String, dynamic> parsedJson) {
+    return MemoContent(
+      content: parsedJson['content'],
+      type: parsedJson['type'],
+    );
+  }
+
+  // factory MemoContent.fromMap(Map<String, dynamic> parsedJson) {
+  //   print("MemoContent");
+
+  //   print(parsedJson);
+  //   print(parsedJson["content"]);
+  //   return new MemoContent(
+  //     content: parsedJson["content"].toString(),
+  //     type: parsedJson["type"].toString(),
+  //   );
+  // }
 
   Map<String, dynamic> toMap() => {
-        "id": id,
-        "title": title,
         "content": content,
-        "updatedAt": updatedAt,
-        "isDeleted": isDeleted == null ? 0 : isDeleted,
+        "type": type,
       };
 }

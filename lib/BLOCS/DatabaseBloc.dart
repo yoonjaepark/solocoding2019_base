@@ -35,8 +35,8 @@ class MemosBloc {
     getMemos();
   }
 
-  add(Memo client) {
-    DBProvider.db.newMemo(client);
+  add(Memo memo) {
+    DBProvider.db.newMemo(memo);
     getMemos();
   }
 
