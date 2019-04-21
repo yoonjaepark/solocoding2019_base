@@ -36,8 +36,8 @@ class _DetailState extends State<Detail> {
               onPressed: () => this.popPress(context, this.selectedMemo,
                   _titleController, _contentController),
             )),
-        body: new Column(children: this._buildContent(this.selectedMemo.content)
-            ));
+        body: new Column(
+            children: this._buildContent(this.selectedMemo.content)));
   }
 
   List<Widget> _buildContent(List<MemoContent> contents) {
@@ -48,12 +48,21 @@ class _DetailState extends State<Detail> {
             },
         child: selectedLine == -1
             ? TextField(
+                style: new TextStyle(fontSize: 20),
                 controller: _titleController,
                 maxLines: null,
                 maxLengthEnforced: false,
+                decoration: new InputDecoration(
+                    contentPadding: const EdgeInsets.all(0)),
                 keyboardType: TextInputType.multiline,
                 onChanged: (text) => this.updateTitleMemo(text))
-            : Text.rich(TextSpan(text: this.selectedMemo.title))));
+            : Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                    child: Text.rich(TextSpan(
+                  style: new TextStyle(fontSize: 20),
+                  text: this.selectedMemo.title,
+                ))))));
 
     for (int i = 0; i < contents.length; i++) {
       _contents.add(GestureDetector(
@@ -62,19 +71,21 @@ class _DetailState extends State<Detail> {
               },
           child: selectedLine == i
               ? TextField(
+                  style: new TextStyle(fontSize: 20),
                   controller: _contentController,
                   maxLines: null,
                   maxLengthEnforced: false,
+                  decoration: new InputDecoration(
+                      contentPadding: const EdgeInsets.all(0)),
                   keyboardType: TextInputType.multiline,
                   onChanged: (text) => this.updateContnetMemo(text, i))
-              : Text.rich(
-                  TextSpan(
-                    style: new TextStyle(
-                        fontSize: 20
-                        ),
+              : Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                      child: Text.rich(TextSpan(
+                    style: new TextStyle(fontSize: 20),
                     text: contents[i].content,
-                  ),
-                )));
+                  ))))));
     }
     if (selectedLine != -1 && selectedLine != null) {
       _contentController.text = contents[selectedLine].content;
