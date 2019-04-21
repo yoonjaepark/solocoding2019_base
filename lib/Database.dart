@@ -95,9 +95,19 @@ class DBProvider {
     return list;
   }
 
-  Future<List<Memo>> getAllMemos() async {
+  Future<List<Memo>> getAllMemos(List sortState) async {
+    var orderText = "";
+    if (sortState[2] == "title") {
+      var titleOrder = sortState[1] == true ? "DESC" : "ASC";
+      var dateOrder = sortState[0] == true ? "DESC" : "ASC";
+      orderText = "title ${titleOrder}";
+    } else if (sortState[2] == "date") {
+      var titleOrder = sortState[1] == true ? "DESC" : "ASC";
+      var dateOrder = sortState[0] == true ? "DESC" : "ASC";
+      orderText = "updatedAt ${dateOrder}";
+    }
     final db = await database;
-    var res = await db.query("Memo");
+    var res = await db.query("Memo", orderBy: orderText);
     List<Memo> list = [];
     if (res.isNotEmpty) {
       for (var i in res) {

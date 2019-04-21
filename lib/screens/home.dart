@@ -24,6 +24,8 @@ class _HomeState extends State<Home> {
   bool _IsSearching;
   String _searchText = "";
 
+  bool _isFab = false;
+
   _HomeState() {
     _searchQuery.addListener(() {
       if (_searchQuery.text.isEmpty) {
@@ -43,6 +45,8 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    print("####dispose");
+
     bloc.dispose();
     super.dispose();
   }
@@ -50,7 +54,9 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    print("####init");
     _IsSearching = false;
+    _isFab = false;
   }
 
   Future onTitlePressed(Memo item) async {
@@ -59,88 +65,172 @@ class _HomeState extends State<Home> {
       "/detail",
       arguments: (item),
     ).then((value) {
-      bloc.getMemos();
+      setState(() {
+        _searchText = "";
+        _IsSearching = false;
+        _isFab = false;
+      });
+      this._handleSearchEnd();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: appBarTitle, actions: <Widget>[
-        new IconButton(
-            icon: actionIcon,
-            onPressed: () {
-              setState(() {
-                if (this.actionIcon.icon == Icons.search) {
-                  this.actionIcon = new Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  );
-                  this.appBarTitle = new TextField(
-                    controller: _searchQuery,
-                    style: new TextStyle(
+        appBar: AppBar(title: appBarTitle, actions: <Widget>[
+          new IconButton(
+              icon: actionIcon,
+              onPressed: () {
+                setState(() {
+                  if (this.actionIcon.icon == Icons.search) {
+                    this.actionIcon = new Icon(
+                      Icons.close,
                       color: Colors.white,
-                    ),
-                    decoration: new InputDecoration(
-                        prefixIcon: new Icon(Icons.search, color: Colors.white),
-                        hintText: "검색...",
-                        hintStyle: new TextStyle(color: Colors.white)),
-                  );
-                  _handleSearchStart();
-                } else {
-                  _handleSearchEnd();
-                }
-              });
-            })
-      ]),
-      body: StreamBuilder<List<Memo>>(
-          stream: bloc.memos,
-          builder: (BuildContext context, AsyncSnapshot<List<Memo>> snapshot) {
-            return ListView.builder(
-                itemCount: snapshot.data == null ? 0 : snapshot.data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  Memo item = snapshot.data[index];
-                  var updatedAt = DateTime.parse(item.updatedAt);
-                  var year = updatedAt.year.toString();
-                  var month = updatedAt.month.toString();
-                  var day = updatedAt.day.toString();
-
-                  if (snapshot.hasData && this._searchText == "") {
-                    return Dismissible(
-                      key: Key(item.id.toString()),
-                      background: Container(color: Colors.red),
-                      onDismissed: (direction) {
-                        bloc.delete(item.id);
-                      },
-                      child: new Column(
-                        children: <Widget>[
-                          new Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[Text('$year년$month월')]),
-                          ListTile(
-                            title: Text(item.title),
-                            subtitle: Text(item.content[0].content),
-                            leading: Text('$day일'),
-                            onTap: () {
-                              this.onTitlePressed(item);
-                            },
-                          )
-                        ],
-                      ),
                     );
+                    this.appBarTitle = new TextField(
+                      controller: _searchQuery,
+                      style: new TextStyle(
+                        color: Colors.white,
+                      ),
+                      decoration: new InputDecoration(
+                          prefixIcon:
+                              new Icon(Icons.search, color: Colors.white),
+                          hintText: "검색...",
+                          hintStyle: new TextStyle(color: Colors.white)),
+                    );
+                    _handleSearchStart();
                   } else {
-                    return ChildItem(item);
+                    _handleSearchEnd();
                   }
                 });
-          }),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () async {
-          bloc.add(new Memo());
-        },
-      ),
-    );
+              })
+        ]),
+        body: StreamBuilder<List<Memo>>(
+            stream: bloc.memos,
+            builder:
+                (BuildContext context, AsyncSnapshot<List<Memo>> snapshot) {
+              return uiBuilder(snapshot);
+            }),
+        floatingActionButton: _getFAB());
+  }
+
+  uiBuilder(AsyncSnapshot<List<Memo>> snapshot) {
+    final resultState = snapshot.data;
+    return ListView.builder(
+        itemCount: resultState == null ? 0 : resultState.length,
+        itemBuilder: (BuildContext context, int index) {
+          Memo item = resultState[index];
+          var updatedAt = DateTime.parse(item.updatedAt);
+          var year = updatedAt.year.toString();
+          var month = updatedAt.month.toString();
+          var day = updatedAt.day.toString();
+
+          if (snapshot.hasData && this._searchText == "") {
+            return Dismissible(
+              key: Key(item.id.toString()),
+              background: Container(color: Colors.red),
+              onDismissed: (direction) {
+                bloc.delete(item.id);
+              },
+              child: new Column(
+                children: <Widget>[
+                  new Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[Text('$year년$month월')]),
+                  ListTile(
+                    title: Text(item.title),
+                    subtitle: Text(item.content[0].content),
+                    leading: Text('$day일'),
+                    onTap: () {
+                      this.onTitlePressed(item);
+                    },
+                  )
+                ],
+              ),
+            );
+          } else {
+            return ListTile(
+                title: Text(item.title),
+                onTap: () {
+                  this.onTitlePressed(item);
+                });
+          }
+        });
+  }
+
+  Widget _getFAB() {
+    return _isFab == false
+        ? Padding(
+            padding: new EdgeInsets.only(bottom: 10),
+            child: FloatingActionButton(
+                child: Icon(Icons.more_vert),
+                onPressed: () async {
+                  // bloc.add(new Memo());
+                  setState(() {
+                    _isFab = true;
+                  });
+                }))
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Padding(
+                padding: new EdgeInsets.only(bottom: 10),
+                child: FloatingActionButton(
+                  heroTag: "title",
+                  child: Icon(
+                    Icons.sort_by_alpha,
+                    color: Colors.white,
+                  ),
+                  onPressed: () async {
+                    bloc.setSort("title");
+                  },
+                ),
+              ),
+              Padding(
+                  padding: new EdgeInsets.only(bottom: 10),
+                  child: FloatingActionButton(
+                    heroTag: "date",
+                    child: Icon(
+                      Icons.date_range,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      bloc.setSort("date");
+                    },
+                  )),
+              Padding(
+                  padding: new EdgeInsets.only(bottom: 10),
+                  child: FloatingActionButton(
+                    heroTag: "new",
+                    child: Icon(
+                      Icons.create,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      bloc.add(new Memo());
+                      setState(() {
+                        _isFab = false;
+                      });
+                    },
+                  )),
+              Padding(
+                  padding: new EdgeInsets.only(bottom: 10),
+                  child: FloatingActionButton(
+                    heroTag: "close",
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isFab = false;
+                      });
+                    },
+                  )),
+            ],
+          );
   }
 
   void _handleSearchStart() {
@@ -163,14 +253,5 @@ class _HomeState extends State<Home> {
       bloc.getMemos();
       _searchQuery.clear();
     });
-  }
-}
-
-class ChildItem extends StatelessWidget {
-  final Memo memo;
-  ChildItem(this.memo);
-  @override
-  Widget build(BuildContext context) {
-    return new ListTile(title: new Text(this.memo.title));
   }
 }

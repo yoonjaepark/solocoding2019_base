@@ -2,16 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:solocoding2019_base/BLOCS/DatabaseBloc.dart';
 import 'package:solocoding2019_base/models/memo.dart';
 
-class Detail extends StatelessWidget {
+class Detail extends StatefulWidget {
+  @override
+  _DetailState createState() => _DetailState();
+}
+
+class _DetailState extends State<Detail> {
   final bloc = MemosBloc();
+  Memo selectedMemo;
+  int selectedLine;
+  _DetailState() {}
+  TextEditingController _contentController = TextEditingController();
+  TextEditingController _titleController = TextEditingController();
+  didChangeDependencies() {
+    print(ModalRoute.of(context).settings.arguments);
+    setState(() {
+      selectedMemo = ModalRoute.of(context).settings.arguments;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final Memo memo = ModalRoute.of(context).settings.arguments;
-    final _contentController = TextEditingController();
-    final _titleController = TextEditingController();
-    _contentController.text = memo.content[0].content;
-    _titleController.text = memo.title;
+    // _contentController.text = this.selectedMemo.content[0].content;
+    // _titleController.text = this.selectedMemo.title;
     return new Scaffold(
         appBar: AppBar(
             automaticallyImplyLeading: true,
@@ -20,37 +33,77 @@ class Detail extends StatelessWidget {
             title: Text('작성하기'),
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
-              onPressed: () => this.popPress(
-                  context, memo, _titleController, _contentController),
+              onPressed: () => this.popPress(context, this.selectedMemo,
+                  _titleController, _contentController),
             )),
-        body: new Column(
-          children: <Widget>[
-            new TextField(
-              controller: _titleController,
-              maxLines: null,
-              maxLengthEnforced: false,
-              keyboardType: TextInputType.multiline,
-            ),
-            new TextField(
-              controller: _contentController,
-              maxLines: null,
-              maxLengthEnforced: false,
-              keyboardType: TextInputType.multiline,
-            ),
-          ],
-        ));
+        body: new Column(children: this._buildContent(this.selectedMemo.content)
+            ));
+  }
+
+  List<Widget> _buildContent(List<MemoContent> contents) {
+    List<Widget> _contents = new List();
+    _contents.add(GestureDetector(
+        onTap: () => {
+              setState(() => {selectedLine = -1})
+            },
+        child: selectedLine == -1
+            ? TextField(
+                controller: _titleController,
+                maxLines: null,
+                maxLengthEnforced: false,
+                keyboardType: TextInputType.multiline,
+                onChanged: (text) => this.updateTitleMemo(text))
+            : Text.rich(TextSpan(text: this.selectedMemo.title))));
+
+    for (int i = 0; i < contents.length; i++) {
+      _contents.add(GestureDetector(
+          onTap: () => {
+                setState(() => {selectedLine = i})
+              },
+          child: selectedLine == i
+              ? TextField(
+                  controller: _contentController,
+                  maxLines: null,
+                  maxLengthEnforced: false,
+                  keyboardType: TextInputType.multiline,
+                  onChanged: (text) => this.updateContnetMemo(text, i))
+              : Text.rich(
+                  TextSpan(
+                    style: new TextStyle(
+                        fontSize: 20
+                        ),
+                    text: contents[i].content,
+                  ),
+                )));
+    }
+    if (selectedLine != -1 && selectedLine != null) {
+      _contentController.text = contents[selectedLine].content;
+    }
+    _titleController.text = this.selectedMemo.title;
+    return _contents;
+  }
+
+  updateTitleMemo(String text) {
+    Memo tempMemo = this.selectedMemo;
+    tempMemo.title = text;
+    setState(() {
+      selectedMemo = tempMemo;
+    });
+  }
+
+  updateContnetMemo(String text, int index) async {
+    Memo tempMemo = this.selectedMemo;
+    tempMemo.content[index] = MemoContent(type: "text", content: text);
+    setState(() {
+      selectedMemo = tempMemo;
+    });
   }
 
   popPress(context, Memo memo, _titleController, _contentController) async {
-    List<MemoContent> result = [];
-    result.add(MemoContent(content: _contentController.text, type: "text"));
     Memo newMemo = new Memo(
         id: memo.id,
         title: _titleController.text,
-        // content: [
-        //   {"type": "text", "content": _contentController.text}
-        // ],
-        content: result,
+        content: this.selectedMemo.content,
         updatedAt: memo.updatedAt);
     this.bloc.update(newMemo);
     Navigator.pop(context, false);

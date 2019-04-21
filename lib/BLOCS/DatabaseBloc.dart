@@ -8,12 +8,27 @@ class MemosBloc {
 
   get memos => _memoController.stream;
 
+  List sortState = [false, false, "date"]; // 날짜 , 텍스트, 타입
+
+  setSort(type) {
+    print(type);
+    print(sortState[2]);
+
+    sortState[2] = type;
+    var index = type == "date" ? 0 : 1;
+    print(index);
+    print(sortState[0]);
+    print(sortState);
+    sortState[index] = !sortState[index];
+    getMemos();
+  }
+
   dispose() {
     _memoController.close();
   }
 
   getMemos() async {
-    _memoController.sink.add(await DBProvider.db.getAllMemos());
+    _memoController.sink.add(await DBProvider.db.getAllMemos(sortState));
   }
 
   MemosBloc() {

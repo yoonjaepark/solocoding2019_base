@@ -23,17 +23,6 @@ class Memo {
   Memo({this.id, this.title, this.content, this.updatedAt, this.isDeleted});
 
   factory Memo.fromMap(Map<String, dynamic> parsedJson) {
-    print("parsedJson['content']");
-    print((parsedJson['content']));
-    JsonCodec codec = new JsonCodec();
-    // var decoded = codec.decode(parsedJson['content']);
-    // print("Decoded 1: $decoded");
-    // List r = [];
-    // var result = codec.decode((parsedJson['content']));
-    // for (var i in result) {
-    //   r.add(MemoContent.fromJson(i));
-    // }
-
     List<MemoContent> products = new List<MemoContent>();
     List jsonParsed = json.decode(parsedJson['content']);
     for (int i = 0; i < jsonParsed.length; i++) {
